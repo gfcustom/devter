@@ -5,6 +5,7 @@ import {
   collection,
   Timestamp,
   addDoc,
+  getDocs,
 } from "firebase/firestore/lite"
 
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -61,7 +62,6 @@ export const loginWithGoogle = () => {
 }
 
 export const addDevit = ({ avatar, content, userId, userName }) => {
-  
   return addDoc(collection(db, "devits"), {
     avatar,
     content,
@@ -74,5 +74,18 @@ export const addDevit = ({ avatar, content, userId, userName }) => {
 }
 
 export const fetchLatestDevits = () => {
-  
+  const intl = Intl.DateTimeFormat("es-AR")
+  return getDocs(collection(db, "devits"), {}).then(({ docs }) => {
+    return docs.map((doc) => {
+      const data = doc.data()
+      const id = doc.id
+      const { createdAt } = data
+      const normalizedCreatedAt = intl.format(createdAt.toDate()).toString()
+      return {
+        ...data,
+        id,
+        createdAt: normalizedCreatedAt,
+      }
+    })
+  })
 }
