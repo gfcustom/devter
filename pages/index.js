@@ -1,28 +1,33 @@
-import Head from "next/head";
-import Button from "../components/Button";
-import styles from "../styles/Home.module.css";
+import Head from "next/head"
+import Button from "components/Button"
+import styles from "styles/Home.module.css"
+import { loginWithGoogle } from "../firebase/client"
 
-import { loginWithGoogle, onAuthStateChanged } from "../firebase/client";
-import { useState, useEffect } from "react";
+import { useEffect } from "react"
+import Avatar from "components/Avatar"
+import { useRouter } from "next/router"
+import useUser, { USER_STATES } from "hooks/useUser"
+
 
 export default function Home() {
-  const [user, setUser] = useState(undefined);
+  const user = useUser()
+  const router = useRouter()
 
   useEffect(() => {
-    onAuthStateChanged(setUser);
-  }, []);
+    user && router.replace("/home")
+  }, [user])
 
   const handleClick = () => {
     loginWithGoogle()
-      .then((user) => {
-        // console.log(user)
-        // const {avatar, userName} = user
-        setUser(user);
-      })
+      // .then((user) => {
+      // console.log(user)
+      // const {avatar, userName} = user
+      //      setUser(user)
+      //  })
       .catch((err) => {
-        console.log(err);
-      });
-  };
+        console.log(err)
+      })
+  }
 
   return (
     <div className={styles.container}>
@@ -39,13 +44,17 @@ export default function Home() {
         <h1 className={styles.title}>Mejor Momento</h1>
         <img alt="Logo" src="/logo.png" className={styles.logoHome} />
         <div>
-          {user === null && (
+          {user === USER_STATES.NOT_LOGGED && (
             <Button onClick={handleClick}>Entrar con Google</Button>
           )}
           {user && user.avatar && (
             <div>
-              <img src={user.avatar} />
-              <strong>{user.username}</strong>
+              <Avatar
+                alt={user.username}
+                src={user.avatar}
+                withText
+                text={user.username}
+              />
             </div>
           )}
         </div>
@@ -53,5 +62,5 @@ export default function Home() {
 
       <footer className={styles.footer}></footer>
     </div>
-  );
+  )
 }
