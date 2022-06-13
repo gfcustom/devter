@@ -1,11 +1,14 @@
 import { initializeApp } from "@firebase/app"
 import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth"
+import { getStorage, ref } from "firebase/storage"
 import {
   getFirestore,
   collection,
   Timestamp,
   addDoc,
   getDocs,
+  query,
+  orderBy,
 } from "firebase/firestore/lite"
 
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -61,10 +64,11 @@ export const loginWithGoogle = () => {
   return signInWithPopup(auth, googleProvider)
 }
 
-export const addDevit = ({ avatar, content, userId, userName }) => {
+export const addDevit = ({ avatar, content, img, userId, userName }) => {
   return addDoc(collection(db, "devits"), {
     avatar,
     content,
+    img,
     userId,
     userName,
     createdAt: Timestamp.fromDate(new Date()),
@@ -73,19 +77,23 @@ export const addDevit = ({ avatar, content, userId, userName }) => {
   })
 }
 
-export const fetchLatestDevits = () => {
-  const intl = Intl.DateTimeFormat("es-AR")
-  return getDocs(collection(db, "devits"), {}).then(({ docs }) => {
-    return docs.map((doc) => {
-      const data = doc.data()
-      const id = doc.id
-      const { createdAt } = data
-      const normalizedCreatedAt = intl.format(createdAt.toDate()).toString()
-      return {
-        ...data,
-        id,
-        createdAt: normalizedCreatedAt,
-      }
-    })
+export const fetchLatestDevits = async () => {
+  const q = query(collection(db, "devits"), orderBy("createdAt", "desc"))
+  const querySnapshot = await getDocs(q)
+
+  const timeline = []
+  querySnapshot.forEach((doc) => {
+    const id = doc.id
+    const data = doc.data()
+    const { createdAt } = data
+
+    timeline.push({ ...data, id, createdAt: +createdAt.toDate() })
   })
+  return timeline
+}
+
+export const uploadImage = (file) => {
+  const storage = getStorage(app)
+  const task = ref(storage, `images/${file.name}`)
+  return task
 }
