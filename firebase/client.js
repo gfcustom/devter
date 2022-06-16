@@ -22,12 +22,17 @@ const firebaseConfig = {
   measurementId: "G-X6M7DL4Q2W",
 }
 
-const app = initializeApp(firebaseConfig)
+let db
+let app
 
-const db = getFirestore(app)
+try {
+  app = initializeApp(firebaseConfig)
+  db = getFirestore(app)
+} catch (e) {
+  console.log("ERROR EN CLIENTJS: ", e)
+}
 
 const mapUserFromFirebaseAuthToUser = (user) => {
-  console.log(user)
   let displayName, photoURL, uid
   if (user) {
     if (user.user) {
